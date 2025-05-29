@@ -489,6 +489,9 @@ declare_features! (
     (incomplete, explicit_tail_calls, "1.72.0", Some(112788)),
     /// Allows using `#[export_stable]` which indicates that an item is exportable.
     (incomplete, export_stable, "1.88.0", Some(139939)),
+    /// Allows `#[export_visibility]` on definitions of statics and/or functions.
+    /* FIXME / DO NOT SUBMIT - use actual bug number */
+    (unstable, export_visibility, "CURRENT_RUSTC_VERSION", Some(123456)),
     /// Allows using `aapcs`, `efiapi`, `sysv64` and `win64` as calling conventions
     /// for functions with varargs.
     (unstable, extended_varargs_abi_support, "1.65.0", Some(100189)),

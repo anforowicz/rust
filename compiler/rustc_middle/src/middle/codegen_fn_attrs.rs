@@ -5,7 +5,7 @@ use rustc_macros::{HashStable, TyDecodable, TyEncodable};
 use rustc_span::Symbol;
 use rustc_target::spec::SanitizerSet;
 
-use crate::mir::mono::Linkage;
+use crate::mir::mono::{Linkage, Visibility};
 
 #[derive(Clone, TyEncodable, TyDecodable, HashStable, Debug)]
 pub struct CodegenFnAttrs {
@@ -27,6 +27,12 @@ pub struct CodegenFnAttrs {
     /// be set when `link_name` is set. This is for foreign items with the
     /// "raw-dylib" kind.
     pub link_ordinal: Option<u16>,
+    /// The `#[export_visibility = "..."]` attribute, with values interpreted
+    /// as follows:
+    /// * `None` - use the "inherent" visibility (either based on the target platform, or provided via
+    ///   `-Zdefault-visibility=...` command-line flag)
+    /// * `Some(...)` - use the item/symbol-specific visibility
+    pub export_visibility: Option<Visibility>,
     /// The `#[target_feature(enable = "...")]` attribute and the enabled
     /// features (only enabled features are supported right now).
     /// Implied target features have already been applied.
@@ -151,6 +157,7 @@ impl CodegenFnAttrs {
             export_name: None,
             link_name: None,
             link_ordinal: None,
+            export_visibility: None,
             target_features: vec![],
             safe_target_features: false,
             linkage: None,

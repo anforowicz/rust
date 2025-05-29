@@ -1,0 +1,8 @@
+error: invalid export visibility value
+  --> $DIR/export-visibility-with-unrecognized-arg.rs:4:23
+   |
+LL | #[export_visibility = "unrecognized spec"]
+   |                       ^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 1 previous error
+

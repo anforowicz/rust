@@ -164,6 +164,7 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
                         ),
                         [sym::no_link, ..] => self.check_no_link(hir_id, attr, span, target),
                         [sym::export_name, ..] => self.check_export_name(hir_id, attr, span, target),
+                        [sym::export_visibility, ..] => self.check_export_visibility(hir_id, attr, span, target),
                         [sym::rustc_layout_scalar_valid_range_start, ..]
                         | [sym::rustc_layout_scalar_valid_range_end, ..] => {
                             self.check_rustc_layout_scalar_valid_range(attr, span, target)
@@ -1698,8 +1699,6 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
     /// Checks if `#[export_name]` is applied to a function or static.
     fn check_export_name(&self, hir_id: HirId, attr: &Attribute, span: Span, target: Target) {
         match target {
-            Target::Static | Target::Fn => {}
-            Target::Method(..) if self.is_impl_item(hir_id) => {}
             // FIXME(#80564): We permit struct fields, match arms and macro defs to have an
             // `#[export_name]` attribute with just a lint, because we previously
             // erroneously allowed it and some crates used it accidentally, to be compatible
@@ -1707,6 +1706,28 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
             Target::Field | Target::Arm | Target::MacroDef => {
                 self.inline_attr_str_error_with_macro_def(hir_id, attr, "export_name");
             }
+            // Other than the exception above, `export_name` and `export_visibility` can be applied
+            // to exactly the same targets.
+            _ => self.check_export_attr_target(hir_id, attr, span, target),
+        }
+    }
+
+    /// Checks if `#[export_visibility]` is applied to a function or static.
+    fn check_export_visibility(&self, hir_id: HirId, attr: &Attribute, span: Span, target: Target) {
+        self.check_export_attr_target(hir_id, attr, span, target)
+    }
+
+    /// Checks if `attr` is applied to a function or `static`.
+    fn check_export_attr_target(
+        &self,
+        hir_id: HirId,
+        attr: &Attribute,
+        span: Span,
+        target: Target,
+    ) {
+        match target {
+            Target::Static | Target::Fn => {}
+            Target::Method(..) if self.is_impl_item(hir_id) => {}
             _ => {
                 self.dcx().emit_err(errors::ExportName { attr_span: attr.span(), span });
             }

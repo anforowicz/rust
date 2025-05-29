@@ -20,7 +20,7 @@ use rustc_middle::ty::{self as ty, TyCtxt};
 use rustc_session::parse::feature_err;
 use rustc_session::{Session, lint};
 use rustc_span::{Ident, Span, sym};
-use rustc_target::spec::SanitizerSet;
+use rustc_target::spec::{SanitizerSet, SymbolVisibility};
 use tracing::debug;
 
 use crate::errors;
@@ -88,6 +88,7 @@ fn codegen_fn_attrs(tcx: TyCtxt<'_>, did: LocalDefId) -> CodegenFnAttrs {
     let mut no_sanitize_span = None;
     let mut mixed_export_name_no_mangle_lint_state = MixedExportNameAndNoMangleState::default();
     let mut no_mangle_span = None;
+    let mut export_visibility_span = None;
 
     for attr in attrs.iter() {
         // In some cases, attribute are only valid on functions, but it's the `check_attr`
@@ -260,6 +261,42 @@ fn codegen_fn_attrs(tcx: TyCtxt<'_>, did: LocalDefId) -> CodegenFnAttrs {
                     }
                     codegen_fn_attrs.export_name = Some(s);
                     mixed_export_name_no_mangle_lint_state.track_export_name(attr.span());
+                }
+            }
+            sym::export_visibility => {
+                export_visibility_span = Some(attr.span());
+                if !tcx.features().export_visibility() {
+                    feature_err(
+                        &tcx.sess,
+                        sym::export_visibility,
+                        attr.span(),
+                        "`#[export_visibility = ...]` is currently unstable",
+                    )
+                    .emit();
+                }
+                if let Some(s) = attr.value_str() {
+                    // `#[export_visibility = "inherit"]` should inherit the default visibility
+                    // of the target platform, or the value specified via
+                    // `-Zdefault-visibility=..`. We reject spelling the attribute as
+                    // `#[export_visibility = "default"]`, because this can be confused with
+                    // "default" from https://llvm.org/docs/LangRef.html#visibility-styles
+                    // which translates into `#[export_visibility = "interposable"]` because
+                    // this is how `SymbolVisibility::Interposable` is spelled.
+                    //
+                    // FIXME / DO NOT SUBMIT: "preset"?  "baseline"?  "intrinsic"?  "inherent"?
+                    let vis = if s.as_str() == "inherit" {
+                        tcx.sess.default_visibility()
+                    } else {
+                        let Ok(vis) = SymbolVisibility::from_str(s.as_str()) else {
+                            tcx.dcx().span_err(
+                                attr.value_span().unwrap(),
+                                "invalid export visibility value",
+                            );
+                            continue;
+                        };
+                        vis
+                    };
+                    codegen_fn_attrs.export_visibility = Some(vis.into());
                 }
             }
             sym::target_feature => {
@@ -470,6 +507,14 @@ fn codegen_fn_attrs(tcx: TyCtxt<'_>, did: LocalDefId) -> CodegenFnAttrs {
             }
             _ => {}
         }
+    }
+
+    if codegen_fn_attrs.export_visibility.is_some() && !codegen_fn_attrs.contains_extern_indicator()
+    {
+        tcx.dcx().span_err(
+            export_visibility_span.unwrap(),
+            "export visibility will be ignored without `export_name`, `no_mangle`, or similar attribute",
+        );
     }
 
     mixed_export_name_no_mangle_lint_state.lint_if_mixed(tcx);

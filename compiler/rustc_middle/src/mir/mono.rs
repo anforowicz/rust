@@ -392,7 +392,7 @@ pub enum Linkage {
 /// Visibility doesn't have any effect when linkage is internal.
 ///
 /// DSO means dynamic shared object, that is a dynamically linked executable or dylib.
-#[derive(Copy, Clone, PartialEq, Debug, HashStable)]
+#[derive(Copy, Clone, PartialEq, Debug, HashStable, TyDecodable, TyEncodable)]
 pub enum Visibility {
     /// Export the symbol from the DSO and apply overrides of the symbol by outside DSOs to within
     /// the DSO if the object file format supports this.
