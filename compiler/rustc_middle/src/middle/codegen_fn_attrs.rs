@@ -7,6 +7,7 @@ use rustc_macros::{HashStable, TyDecodable, TyEncodable};
 use rustc_span::Symbol;
 use rustc_target::spec::SanitizerSet;
 
+use crate::middle::exported_symbols::SymbolExportLevel;
 use crate::mir::mono::Linkage;
 use crate::ty::{InstanceKind, TyCtxt};
 
@@ -49,6 +50,10 @@ pub struct CodegenFnAttrs {
     /// be set when `link_name` is set. This is for foreign items with the
     /// "raw-dylib" kind.
     pub link_ordinal: Option<u16>,
+    /// `None` means to use the default value.  `Some(level)` means that this specific
+    /// level should be used. Typically set to `Some(level)` when
+    /// `#[rust_symbol_export_level]` attribute has been used.
+    pub export_level: Option<SymbolExportLevel>,
     /// The `#[target_feature(enable = "...")]` attribute and the enabled
     /// features (only enabled features are supported right now).
     /// Implied target features have already been applied.
@@ -173,6 +178,7 @@ impl CodegenFnAttrs {
             export_name: None,
             link_name: None,
             link_ordinal: None,
+            export_level: None,
             target_features: vec![],
             safe_target_features: false,
             linkage: None,

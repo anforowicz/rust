@@ -13,6 +13,7 @@ use rustc_hir::{self as hir, LangItem, lang_items};
 use rustc_middle::middle::codegen_fn_attrs::{
     CodegenFnAttrFlags, CodegenFnAttrs, PatchableFunctionEntry,
 };
+use rustc_middle::middle::exported_symbols::SymbolExportLevel;
 use rustc_middle::mir::mono::Linkage;
 use rustc_middle::query::Providers;
 use rustc_middle::span_bug;
@@ -112,6 +113,18 @@ fn codegen_fn_attrs(tcx: TyCtxt<'_>, did: LocalDefId) -> CodegenFnAttrs {
                 AttributeKind::Cold(_) => codegen_fn_attrs.flags |= CodegenFnAttrFlags::COLD,
                 AttributeKind::ExportName { name, .. } => {
                     codegen_fn_attrs.export_name = Some(*name);
+                }
+                AttributeKind::RustSymbolExportLevel(span) => {
+                    if !tcx.features().rust_symbol_export_level() {
+                        feature_err(
+                            &tcx.sess,
+                            sym::rust_symbol_export_level,
+                            *span,
+                            "`#[rust_symbol_export_level]` is currently unstable",
+                        )
+                        .emit();
+                    }
+                    codegen_fn_attrs.export_level = Some(SymbolExportLevel::Rust);
                 }
                 AttributeKind::Naked(_) => codegen_fn_attrs.flags |= CodegenFnAttrFlags::NAKED,
                 AttributeKind::Align { align, .. } => codegen_fn_attrs.alignment = Some(*align),
@@ -507,6 +520,17 @@ fn codegen_fn_attrs(tcx: TyCtxt<'_>, did: LocalDefId) -> CodegenFnAttrs {
                 ))
         }
         err.emit();
+    }
+
+    if codegen_fn_attrs.export_level.is_some() && !codegen_fn_attrs.contains_extern_indicator() {
+        let rust_symbol_export_level_span =
+            find_attr!(attrs, AttributeKind::RustSymbolExportLevel(span) => *span)
+                .unwrap_or_default();
+        tcx.dcx().span_err(
+            rust_symbol_export_level_span,
+            "`#[rust_symbol_export_level]` will be ignored \
+             without `export_name`, `no_mangle`, or similar attribute",
+        );
     }
 
     if let Some(features) = check_tied_features(

@@ -237,6 +237,9 @@ impl<'tcx> CheckAttrVisitor<'tcx> {
                 Attribute::Parsed(AttributeKind::ExportName { span: attr_span, .. }) => {
                     self.check_export_name(hir_id, *attr_span, span, target)
                 }
+                Attribute::Parsed(AttributeKind::RustSymbolExportLevel { .. }) => {
+                    /* verified in compiler/rustc_codegen_ssa/src/codegen_attrs.rs */
+                }
                 Attribute::Parsed(AttributeKind::Align { align, span: attr_span }) => {
                     self.check_align(span, hir_id, target, *align, *attr_span)
                 }

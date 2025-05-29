@@ -1,0 +1,8 @@
+error: `#[rust_symbol_export_level]` will be ignored without `export_name`, `no_mangle`, or similar attribute
+  --> $DIR/rust-symbol-export-level-without-export-name.rs:4:1
+   |
+LL | #[rust_symbol_export_level]
+   | ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+error: aborting due to 1 previous error
+

@@ -118,6 +118,13 @@ impl<S: Stage> SingleAttributeParser<S> for ExportNameParser {
     }
 }
 
+pub(crate) struct RustSymbolExportLevelParser;
+impl<S: Stage> NoArgsAttributeParser<S> for RustSymbolExportLevelParser {
+    const PATH: &[Symbol] = &[sym::rust_symbol_export_level];
+    const ON_DUPLICATE: OnDuplicate<S> = OnDuplicate::Error;
+    const CREATE: fn(Span) -> AttributeKind = AttributeKind::RustSymbolExportLevel;
+}
+
 #[derive(Default)]
 pub(crate) struct NakedParser {
     span: Option<Span>,

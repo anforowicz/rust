@@ -928,15 +928,17 @@ fn default_visibility(tcx: TyCtxt<'_>, id: DefId, is_generic: bool) -> Visibilit
         return Visibility::Default;
     }
 
-    let export_level = if is_generic {
-        // Generic functions never have export-level C.
-        SymbolExportLevel::Rust
-    } else {
-        match tcx.reachable_non_generics(id.krate).get(&id) {
-            Some(SymbolExportInfo { level: SymbolExportLevel::C, .. }) => SymbolExportLevel::C,
-            _ => SymbolExportLevel::Rust,
+    let export_level = tcx.codegen_fn_attrs(id).export_level.unwrap_or_else(|| {
+        if is_generic {
+            // Generic functions never have export-level C.
+            SymbolExportLevel::Rust
+        } else {
+            match tcx.reachable_non_generics(id.krate).get(&id) {
+                Some(SymbolExportInfo { level: SymbolExportLevel::C, .. }) => SymbolExportLevel::C,
+                _ => SymbolExportLevel::Rust,
+            }
         }
-    };
+    });
 
     match export_level {
         // C-export level items remain at `Default` to allow C code to

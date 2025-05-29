@@ -66,6 +66,7 @@ impl AttributeKind {
             ProcMacroDerive { .. } => No,
             PubTransparent(..) => Yes,
             Repr { .. } => No,
+            RustSymbolExportLevel { .. } => No,
             RustcBuiltinMacro { .. } => Yes,
             RustcLayoutScalarValidRangeEnd(..) => Yes,
             RustcLayoutScalarValidRangeStart(..) => Yes,

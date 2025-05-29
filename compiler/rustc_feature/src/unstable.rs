@@ -625,6 +625,9 @@ declare_features! (
     (unstable, return_type_notation, "1.70.0", Some(109417)),
     /// Allows `extern "rust-cold"`.
     (unstable, rust_cold_cc, "1.63.0", Some(97544)),
+    /// Allows `#[rust_symbol_export_level]` on definitions of statics and/or functions.
+    /* FIXME / DO NOT SUBMIT - use actual bug number */
+    (unstable, rust_symbol_export_level, "CURRENT_RUSTC_VERSION", Some(123456)),
     /// Allows the use of SIMD types in functions declared in `extern` blocks.
     (unstable, simd_ffi, "1.0.0", Some(27731)),
     /// Allows specialization of implementations (RFC 1210).

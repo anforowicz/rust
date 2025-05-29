@@ -1806,6 +1806,7 @@ symbols! {
         rust_future,
         rust_logo,
         rust_out,
+        rust_symbol_export_level,
         rustc,
         rustc_abi,
         // FIXME(#82232, #143834): temporary name to mitigate `#[align]` nameres ambiguity

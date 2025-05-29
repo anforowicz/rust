@@ -431,6 +431,10 @@ pub enum AttributeKind {
     /// Represents [`#[repr]`](https://doc.rust-lang.org/stable/reference/type-layout.html#representations).
     Repr { reprs: ThinVec<(ReprAttr, Span)>, first_span: Span },
 
+    /// Represents `#[rust_symbol_export_level]` which is one of alternatives discussed
+    /// in <https://github.com/rust-lang/rfcs/pull/3834>.
+    RustSymbolExportLevel(Span),
+
     /// Represents `#[rustc_builtin_macro]`.
     RustcBuiltinMacro { builtin_name: Option<Symbol>, helper_attrs: ThinVec<Symbol>, span: Span },
 
